@@ -1,0 +1,756 @@
+
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+  <title>抽奖</title>
+  <style type="text/css">
+
+html, body { height: 100%; }
+
+body {
+    background: #e63531 url(https://gw.alicdn.com/tfs/TB1HX3PQVXXXXbNapXXXXXXXXXX-2668-2001.jpg) no-repeat center center;
+    
+    background-size: cover;
+  /*background: rgba(0,0,0,1);*/
+}
+
+canvas {
+  display: block;
+  cursor: crosshair;
+}
+  body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+  
+  div,
+  ul,
+  li {
+    list-style: none;
+    margin: 0;
+    padding: 0
+  }
+  
+  .box {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+  }
+  
+  .box > .draw {
+  	flex: 1;
+      overflow: hidden;
+    display: flex;
+    position: relative;
+    justify-content: center;
+    align-items: center;
+    width: 80%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    border: 3px solid #fff;
+  }
+  .draw:before{
+      content:"";
+      top: 0;
+      left: 0;
+      position: absolute;
+      width: 100%;
+      height: 100%;
+    background: #e63531 url(https://gw.alicdn.com/tfs/TB1HX3PQVXXXXbNapXXXXXXXXXX-2668-2001.jpg) no-repeat center center;
+    background-size: cover;
+    opacity: .5;
+    filter: blur(16px);
+  }
+  .name {
+      color:#fff;
+      text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.4);
+      position: relative;
+      z-index: 22;
+    width: 100%;
+    font-size: 48px;
+    line-height: 1;
+    text-align: center;
+    overflow: hidden;
+  }
+  
+  .name ul {
+    mx-height: 300px
+  }
+  
+  .name ul li {
+    display: inline-block;
+    width: 20%;
+    text-align: center;
+
+    padding:10px 0;
+  }
+  
+  .btns,
+  .btns2 {
+    display: flex;
+    position: relative;
+    z-index: 99;
+    justify-content: center;
+    align-items: center;
+    flex-direction: row;
+    width: 100%;
+  }
+  
+  .btns2 {
+    width: 60%;
+    margin: 30px 0;
+  }
+  
+  .btn {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 50px;
+    line-height: 1;
+    border: 2px solid #fff;
+    border-radius: 8px;
+    margin-top: 10px;
+    font-size: 28px;
+    color: #fff;
+    background: rgba(89, 199, 0, 0.8);
+  }
+  
+  .btn_sub {
+    width: 100%;
+    flex: 1;
+    padding: 20px;
+  }
+  
+  .opened {
+    background: #ddd;
+  }
+  
+  h1 {
+    color: #fff;
+  }
+  </style>
+  <script type="text/javascript" src="http://g.alicdn.com/mtb/??lib-yocto/0.0.5/yocto.js,lib-env/1.5.15/env.js"></script>
+</head>
+
+<body>
+  <div>
+    <div class="box">
+      <h1>抽奖</h1>
+      <div class="draw">
+        <div id="J_box" class="name">中奖是必须的</div>
+      </div>
+      <div class="btns">
+        <div class="btn_sub">
+          <div class="btn" name="0" type="0" num="3" title="一等奖">一等奖</div>
+          <div class="btn" name="1" type="3" num="30" title="幸运奖">幸运奖</div>
+        </div>
+        <div class="btn_sub">
+          <div class="btn" name="2" type="1" num="10" title="二等奖">二等奖</div>
+          <div class="btn" name="3" type="3" num="20" title="幸运奖">幸运奖</div>
+        </div>
+        <div class="btn_sub">
+          <div class="btn" name="4" type="2" num="20" title="三等奖">三等奖</div>
+          <div class="btn" name="5" type="3" num="10" title="幸运奖">幸运奖</div>
+        </div>
+      </div>
+      <div class="btns2" style="display:none">
+        <div class="btn" id="J_btn">开始</div>
+      </div>
+    </div>
+  </div>
+  <div style="text-align:left;width:100%">
+    <audio  autoplay="autoplay" src="http://om5.alicdn.com/526/2100004526/2100368991/1776272710_60423872_l.mp3?auth_key=ae077b9e252e006181ee9e6c2fccd20e-1484362800-0-null" >
+			Your browser does not support the audio element.
+	</audio>
+  </div>
+  <canvas id="canvas">Canvas is not supported by your browser.</canvas>
+  <!-- 抽奖随机 -->
+<script type="text/javascript">
+  // 抽奖随机
+  function LuckyDraw(opts) {
+    this.isStop = true;
+    this.allNames = opts.all;
+    this.showNums = opts.showNums || 20;
+    this.speed = this.showNums >= 10 ? 1 : 20;
+    this.timer = null;
+    this.container = document.body.querySelector(opts.container);
+    if (!this.container) {
+      return;
+    }
+
+    this.showWinName = this.showWinName;
+    this.start = this.start;
+    this.stop = this.stop;
+  }
+
+  LuckyDraw.prototype = {
+    start: function() {
+      var that = this;
+      var showNums = this.showNums;
+      var allNames = this.allNames;
+      
+
+      that.speed = that.showNums >= 10 && that.showNums < 20 ? 10 : that.showNums >= 20 ? 1 : 20;
+      that.isStop = true;
+      that.container.innerHTML = '';
+      var timer = setTimeout(function() {
+        that.isStop = false;
+        that.showAnimatNames(showNums, allNames)
+      }, 20)
+
+
+    },
+
+    stop: function() {
+      this.isStop = true;
+      this.container.innerHTML = '开奖中...';
+    },
+    // 屏幕跳动的人名
+    showAnimatNames: function(nums, names) {
+      var that = this;
+      var showNames = [];
+      that.getRadomName(names.length, function(n) {
+        var name = names[n];
+        //if (showNames.indexOf(name) == -1) {
+        showNames.push(name);
+        //}
+        //console.log(showNames.length)
+        if (showNames.length >= nums) {
+          //console.log(showNames)
+          that.getWinName(showNames)
+          showNames = [];
+        }
+      })
+    },
+
+    // 展示获奖名单
+    showWinName: function(names) {
+      this.isStop = true;
+      if(typeof names === 'object'){
+
+      	this.getWinName(names)
+      }else{
+      	this.container.innerHTML = names;
+      }
+    },
+
+    getWinName: function(names) {
+
+      var winNames = names.join('</li><li>');
+      var winNameObj = '<ul><li>' + winNames + '</li></ul>';
+      this.container.innerHTML = winNameObj;
+    },
+
+    getRadomName: function(nums, callBack) {
+      var that = this;
+      var n = that.getRandom(nums);
+      callBack && callBack(n);
+
+
+      var timer = setTimeout(function() {
+        if (!that.isStop) {
+          that.getRadomName(nums, callBack)
+        }
+
+        clearTimeout(timer)
+
+      }, that.speed)
+
+    },
+
+    // 获取随机数
+    getRandom: function(num) {
+      return parseInt(Math.random() * num, 10);
+    }
+  }
+
+  function getAllNames() {
+    return [
+      "潜石", "大鹏", "明兮", "长孙泰", "开山", "颜垣", "云冲", "方生", "朱停", "晓生", "极寒", "篱悠", "凌菲", "宗豪", "琚雪", "方嘉", "景升", "长弓", "石泉", "乔福", "张角", "萧然", "灵玉", "伏念", "婉谦", "子房", "晓澜", "雏田", "孤瞻", "泓冰", "无心", "聂云", "息衍", "拔群", "麻子", "静渊", "狄云", "山宇", "青宸", "影逸", "长恭", "劲荪", "玄暐", "淘云", "雪岩", "重哥", "泉铭", "马疯", "容隽", "言沛", "丹琼", "学诚", "书步", "初歆", "师影", "骨玉", "明锋", "昊轩", "凌言", "寻弦", "夏焱", "继泽", "朱家", "兮瓜", "燮羽", "惊帆", "玄聪", "思奋", "煜晨", "广武", "晏之", "玄笛", "景宝", "怀质", "孤临", "济宇", "仙山", "明义", "矢亮", "南葛", "黑嘿", "照烈", "舒哲", "藿香", "瑞克", "翼安", "北隐", "九米", "牧熵", "溸馨", "望辰", "霜草", "杉一", "久歌", "南知", "丰火", "学愚", "皙华", "懿恒", "望诸", "牧栖", "煜石", "颖钧", "疯隐", "有马", "怀书", "辰染", "诩嘉", "止其", "远至", "雪瑾", "泛叶", "秋伏", "凤煜", "大饱", "木午", "沐翊", "哈士", "营造", "梓栋", "泽予", "处默", "之君", "奇水", "锦此", "长山", "文钰", "婳薇", "蜀翼", "史雷", "且末", "咪嗷", "水军", "桐城", "九瑶", "磐冲", "诚瑾", "洛洋", "极源", "彦尘", "壮实", "云煦", "天叔", "冬流", "渭河"
+    ]
+  }
+</script>
+  <script type="text/javascript">
+  // 开始
+  var params = lib.env.params;
+  // 开启正常模式
+  if (params.normal === 'true' && params.num && params.type) {
+    $('.btns').hide();
+    $('.btns2').show();
+  }else{
+
+  }
+
+  fetch("http://127.0.0.1:2017/all")
+    .then((res)=>{
+        return res.text()
+    })
+    .then(body => {
+        console.log(body)
+            var luckyDraw = new LuckyDraw({
+                showNums: 20,
+                container: '#J_box',
+                all:body.split(',')
+             })
+    
+ 
+    //luckyDraw.start();
+
+  
+  var oBtn = $('.btn');
+  var typeName = ['一等奖','二等奖','三等奖','幸运奖'];
+  oBtn.on('click', function(e) {
+    var target = $(e.target);
+    var num = target.attr('num');
+    var type = target.attr('type');
+    var state = target.attr('state');
+    var title = target.attr('title');
+    var name = target.attr('name');
+
+    if (params.normal === 'true' && params.num && params.type) {
+    	num = params.num;
+    	type = params.type;
+    }
+    
+    // 恢复按钮显示的文案
+    for (var i = 0; i < oBtn.length; i++) {
+      var btn = oBtn[i];
+      var _title = btn.getAttribute('title');
+      var _state = btn.getAttribute('state');
+      var _name = btn.getAttribute('name');
+      if (_state == 'start' && _name !== name) {
+        btn.innerHTML = _title;
+        btn.setAttribute('state', '');
+        btn.setAttribute('style', '');
+      }
+    }
+
+
+    var opt = {
+      num: num,
+      type: type
+    }
+
+    if (!(num && type)) {
+      opt = params;
+    }
+
+    $('.btn').attr('style', '');
+    $('h1').text(typeName[type]);
+
+    if (target.hasClass('opened')) {
+    	target.addClass('opened');
+    	luckyDraw.showWinName('求中奖/(ㄒoㄒ)/~~');
+    	$('h1').text('抽奖');
+      // return;
+    }else if (!state) {
+      target.attr('state', 'start');
+      luckyDraw.showNums = num;
+      luckyDraw.start();
+      target.html('开奖');
+
+	    target.css({
+	      "background": '#E91E63',
+	      "font-size": '36px'
+	    })
+
+    } else if (state === 'start') {
+      target.html('开奖');
+
+      target.css({
+	      "background": '#E91E63',
+	      "font-size": '36px'
+	    })
+
+      luckyDraw.stop();
+      getWinPeple({
+        num: num,
+        type: type
+      }, function() {
+        target.html('已开奖');
+        target.addClass('opened');
+        target.attr('state', 'opened')
+      })
+    } else {
+
+    }
+
+  })
+
+
+
+  function getWinPeple(opt, callBack) {
+    var num = opt.num;
+
+    if (!isNaN(num)) {
+      num = Number(num);
+    }
+
+    luckyDraw.showNums = num;
+
+    getRequestWin(opt, function(names) {
+      callBack && callBack();
+      luckyDraw.showWinName(names);
+    })
+  }
+
+  // 请求数据
+  function getRequestWin(opt, callBack) {
+    fetch(`http://127.0.0.1:2017/${+opt.type+1}?n=${opt.num}`)
+        .then((res)=>{
+            return res.text()
+        })
+        .then(body => {
+            console.log(body)
+            var winName = body.split(',')
+            console.log(opt)
+            callBack && callBack(winName);
+        })
+  }
+  function click(e){
+            fetch("http://127.0.0.1:2017/1")
+                .then((res)=>{
+                    return res.text()
+                })
+                .then(body => {
+                    console.log(body)
+                    who.innerHTML = body
+                    let react = who.getBoundingClientRect()
+                    shadow.style.height = react.height + 'px'
+                })
+        }
+    })
+  </script>
+
+    <script>
+       // Options
+        var options = {
+        /* Which hue should be used for the first batch of rockets? */
+        startingHue: 120,
+        /* How many ticks the script should wait before a new firework gets spawned, if the user is holding down his mouse button. */
+        clickLimiter: 5,
+        /* How fast the rockets should automatically spawn, based on ticks */
+        timerInterval: 40,
+        /* Show pulsing circles marking the targets? */
+        showTargets: true,
+        /* Rocket movement options, should be self-explanatory */
+        rocketSpeed: 2,
+        rocketAcceleration: 1.03,
+        /* Particle movement options, should be self-explanatory */
+        particleFriction: 0.95,
+        particleGravity: 1,
+        /* Minimum and maximum amount of particle spawns per rocket */
+        particleMinCount: 25,
+        particleMaxCount: 40,
+        /* Minimum and maximum radius of a particle */
+        particleMinRadius: 3,
+        particleMaxRadius: 5
+        };
+
+        // Local variables
+        var fireworks = [];
+        var particles = [];
+        var mouse = {down: false, x: 0, y: 0};
+        var currentHue = options.startingHue;
+        var clickLimiterTick = 0;
+        var timerTick = 0;
+        var cntRocketsLaunched = 0;
+
+        // Helper function for canvas animations
+        window.requestAnimFrame = (function() {
+        return window.requestAnimationFrame ||
+            window.webkitRequestAnimationFrame ||
+            window.mozRequestAnimationFrame ||
+            function(cb) {
+            window.setTimeout(callback, 1000 / 60);
+            }
+        })();
+
+        // Helper function to return random numbers within a specified range
+        function random(min, max) {
+        return Math.random() * (max - min) + min;
+        }
+
+        // Helper function to calculate the distance between 2 points
+        function calculateDistance(p1x, p1y, p2x, p2y) {
+        var xDistance = p1x - p2x;
+        var yDistance = p1y - p2y;
+        return Math.sqrt(Math.pow(xDistance, 2) + Math.pow(yDistance, 2));
+        }
+
+        // Setup some basic variables
+        var canvas = document.getElementById('canvas');
+        var canvasCtx = canvas.getContext('2d');
+        var canvasWidth = window.innerWidth;
+        var canvasHeight = window.innerHeight;
+
+        // Resize canvas
+        canvas.width = canvasWidth;
+        canvas.height = canvasHeight;
+
+        // Firework class
+        function Firework(sx, sy, tx, ty) {  
+        // Set coordinates (x/y = actual, sx/sy = starting, tx/ty = target)
+        this.x = this.sx = sx;
+        this.y = this.sy = sy;
+        this.tx = tx; this.ty = ty;
+        
+        // Calculate distance between starting and target point
+        this.distanceToTarget = calculateDistance(sx, sy, tx, ty);
+        this.distanceTraveled = 0;
+
+        // To simulate a trail effect, the last few coordinates will be stored
+        this.coordinates = [];
+        this.coordinateCount = 3;
+        
+        // Populate coordinate array with initial data
+        while(this.coordinateCount--) {
+            this.coordinates.push([this.x, this.y]);
+        }
+        
+        // Some settings, you can adjust them if you'd like to do so.
+        this.angle = Math.atan2(ty - sy, tx - sx);
+        this.speed = options.rocketSpeed;
+        this.acceleration = options.rocketAcceleration;
+        this.brightness = random(50, 80);
+        this.hue = currentHue;
+        this.targetRadius = 1;
+        this.targetDirection = false;  // false = Radius is getting bigger, true = Radius is getting smaller
+        
+        // Increase the rockets launched counter
+        cntRocketsLaunched++;
+        };
+
+        // This method should be called each frame to update the firework
+        Firework.prototype.update = function(index) {
+        // Update the coordinates array
+        this.coordinates.pop();
+        this.coordinates.unshift([this.x, this.y]);
+        
+        // Cycle the target radius (used for the pulsing target circle)
+        if(!this.targetDirection) {
+            if(this.targetRadius < 8)
+            this.targetRadius += 0.15;
+            else
+            this.targetDirection = true;  
+        } else {
+            if(this.targetRadius > 1)
+            this.targetRadius -= 0.15;
+            else
+            this.targetDirection = false;
+        }
+        
+        // Speed up the firework (could possibly travel faster than the speed of light) 
+        this.speed *= this.acceleration;
+        
+        // Calculate the distance the firework has travelled so far (based on velocities)
+        var vx = Math.cos(this.angle) * this.speed;
+        var vy = Math.sin(this.angle) * this.speed;
+        this.distanceTraveled = calculateDistance(this.sx, this.sy, this.x + vx, this.y + vy);
+        
+        // If the distance traveled (including velocities) is greater than the initial distance
+        // to the target, then the target has been reached. If that's not the case, keep traveling.
+        if(this.distanceTraveled >= this.distanceToTarget) {
+            createParticles(this.tx, this.ty);
+            fireworks.splice(index, 1);
+        } else {
+            this.x += vx;
+            this.y += vy;
+        }
+        };
+
+        // Draws the firework
+        Firework.prototype.draw = function() {
+        var lastCoordinate = this.coordinates[this.coordinates.length - 1];
+        
+        // Draw the rocket
+        canvasCtx.beginPath();
+        canvasCtx.moveTo(lastCoordinate[0], lastCoordinate[1]);
+        canvasCtx.lineTo(this.x, this.y);
+        canvasCtx.strokeStyle = 'hsl(' + this.hue + ',100%,' + this.brightness + '%)';
+        canvasCtx.stroke();
+        
+        // Draw the target (pulsing circle)
+        if(options.showTargets) {
+            canvasCtx.beginPath();
+            canvasCtx.arc(this.tx, this.ty, this.targetRadius, 0, Math.PI * 2);
+            canvasCtx.stroke();
+        }
+        };
+
+        // Particle class
+        function Particle(x, y) {
+        // Set the starting point
+        this.x = x;
+        this.y = y;
+        
+        // To simulate a trail effect, the last few coordinates will be stored
+        this.coordinates = [];
+        this.coordinateCount = 5;
+        
+        // Populate coordinate array with initial data
+        while(this.coordinateCount--) {
+            this.coordinates.push([this.x, this.y]);
+        }
+        
+        // Set a random angle in all possible directions (radians)
+        this.angle = random(0, Math.PI * 2);
+        this.speed = random(1, 10);
+        
+        // Add some friction and gravity to the particle
+        this.friction = options.particleFriction;
+        this.gravity = options.particleGravity;
+        
+        // Change the hue to a random number
+        this.hue = random(currentHue - 20, currentHue + 20);
+        this.brightness = random(50, 80);
+        this.alpha = 1;
+        
+        // Set how fast the particles decay
+        this.decay = random(0.01, 0.03);
+        }
+
+        // Updates the particle, should be called each frame
+        Particle.prototype.update = function(index) {
+        // Update the coordinates array
+        this.coordinates.pop();
+        this.coordinates.unshift([this.x, this.y]);
+        
+        // Slow it down (based on friction)
+        this.speed *= this.friction;
+        
+        // Apply velocity to the particle
+        this.x += Math.cos(this.angle) * this.speed;
+        this.y += Math.sin(this.angle) * this.speed + this.gravity;
+        
+        // Fade out the particle, and remove it if alpha is low enough
+        this.alpha -= this.decay;
+        if(this.alpha <= this.decay) {
+            particles.splice(index, 1);
+        }
+        }
+
+        // Draws the particle
+        Particle.prototype.draw = function() {
+        var lastCoordinate = this.coordinates[this.coordinates.length - 1];
+        var radius = Math.round(random(options.particleMinRadius, options.particleMaxRadius));
+        
+        // Create a new shiny gradient
+        var gradient = canvasCtx.createRadialGradient(this.x, this.y, 0, this.x, this.y, radius);
+        gradient.addColorStop(0.0, 'white');
+        gradient.addColorStop(0.1, 'white');
+        gradient.addColorStop(0.1, 'hsla(' + this.hue + ',100%,' + this.brightness + '%,' + this.alpha + ')');
+        gradient.addColorStop(1.0, 'rgba(255,255,255,.0)');
+        
+        // Draw the gradient
+        canvasCtx.beginPath();
+        canvasCtx.fillStyle = gradient;
+        canvasCtx.arc(this.x, this.y, radius, Math.PI * 2, false);
+        canvasCtx.fill();
+        }
+
+        // Create a bunch of particles at the given position
+        function createParticles(x, y) {
+        var particleCount = Math.round(random(options.particleMinCount, options.particleMaxCount));
+        while(particleCount--) {
+            particles.push(new Particle(x, y));
+        }
+        }
+
+        // Add an event listener to the window so we're able to react to size changes
+        window.addEventListener('resize', function(e) {
+        canvas.width = canvasWidth = window.innerWidth;
+        canvas.height = canvasHeight = window.innerHeight;
+        });
+
+        // Add event listeners to the canvas to handle mouse interactions
+        canvas.addEventListener('mousemove', function(e) {
+        e.preventDefault();
+        mouse.x = e.pageX - canvas.offsetLeft;
+        mouse.y = e.pageY - canvas.offsetTop;
+        });
+
+        canvas.addEventListener('mousedown', function(e) {
+        e.preventDefault();
+        mouse.down = true;
+        });
+
+        canvas.addEventListener('mouseup', function(e) {
+        e.preventDefault();
+        mouse.down = false;
+        });
+
+        // Main application / script, called when the window is loaded
+        function gameLoop() {
+        // This function will rund endlessly by using requestAnimationFrame (or fallback to setInterval)
+        requestAnimFrame(gameLoop);
+        
+        // Increase the hue to get different colored fireworks over time
+        currentHue += 0.5;
+        
+        // 'Clear' the canvas at a specific opacity, by using 'destination-out'. This will create a trailing effect.
+        canvasCtx.globalCompositeOperation = 'destination-out';
+        canvasCtx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+        canvasCtx.fillRect(0, 0, canvasWidth, canvasHeight);
+        canvasCtx.globalCompositeOperation = 'lighter';
+        
+        // Loop over all existing fireworks (they should be updated & drawn)
+        var i = fireworks.length;
+        while(i--) {
+            fireworks[i].draw();
+            fireworks[i].update(i);
+        }
+        
+        // Loop over all existing particles (they should be updated & drawn)
+        var i = particles.length;
+        while(i--) {
+            particles[i].draw();
+            particles[i].update(i);
+        }
+        
+        // Draw some text
+        canvasCtx.fillStyle = 'white';
+        canvasCtx.font = '14px Arial';
+        canvasCtx.fillText('Rockets launched: ' + cntRocketsLaunched, 10, 24);
+        
+        // Launch fireworks automatically to random coordinates, if the user does not interact with the scene
+        if(timerTick >= options.timerInterval) {
+            if(!mouse.down) {
+            fireworks.push(new Firework(canvasWidth / 2, canvasHeight, random(0, canvasWidth), random(0, canvasHeight / 2)));
+            timerTick = 0;
+            }
+        } else {
+            timerTick++;
+        }
+        
+        // Limit the rate at which fireworks can be spawned by mouse
+        if(clickLimiterTick >= options.clickLimiter) {
+            if(mouse.down) {
+            fireworks.push(new Firework(canvasWidth / 2, canvasHeight, mouse.x, mouse.y));
+            clickLimiterTick = 0;
+            }
+        } else {
+            clickLimiterTick++;
+        }
+        }
+
+        window.onload = gameLoop();
+    </script>
+</body>
+
+</html>
